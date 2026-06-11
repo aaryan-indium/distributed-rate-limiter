@@ -1,0 +1,22 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.local
+
+# VS Code
+.vscode/
+
+# Copilot context (internal, not part of the project contract)
+COPILOT_CONTEXT.md
+
+# Docker
+.dockerignore
