@@ -10,7 +10,7 @@ services:
   app1:
     build:
       context: .
-      dockerfile: Dockerfile/Dockerfile
+      dockerfile: Dockerfile
     container_name: app1
     environment:
       REDIS_URL: redis://redis:6379
@@ -24,7 +24,7 @@ services:
   app2:
     build:
       context: .
-      dockerfile: Dockerfile/Dockerfile
+      dockerfile: Dockerfile
     container_name: app2
     environment:
       REDIS_URL: redis://redis:6379

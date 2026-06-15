@@ -3,3 +3,5 @@ uvicorn
 redis
 pydantic-settings
 pytest
+
+prometheus-fastapi-instrumentator

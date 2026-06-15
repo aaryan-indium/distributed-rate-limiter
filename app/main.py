@@ -1,11 +1,13 @@
 from typing import Dict
 
 from fastapi import FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.api.routes import router as api_router
 from app.limiter.redis_client import ping_redis
 
 app = FastAPI(title="Distributed Rate Limiter POC")
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/")
