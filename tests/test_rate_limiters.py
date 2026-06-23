@@ -146,7 +146,7 @@ class TestSlidingWindow:
 			result = limiter.allow_request("user-1")
 
 		assert result["allowed"] is True
-		assert result["remaining"] == pytest.approx(10.0, abs=0.01)
+		assert result["remaining"] == pytest.approx(9.0, abs=0.01)
 
 	def test_allows_within_limit(self, mock_redis: MagicMock) -> None:
 		now = 100.0
@@ -161,7 +161,7 @@ class TestSlidingWindow:
 			result = limiter.allow_request("user-2")
 
 		assert result["allowed"] is True
-		assert result["remaining"] == pytest.approx(5.0, abs=0.01)
+		assert result["remaining"] == pytest.approx(4.0, abs=0.01)
 
 	def test_denies_when_limit_reached(self, mock_redis: MagicMock) -> None:
 		now = 100.0
@@ -189,7 +189,7 @@ class TestSlidingWindow:
 
 		assert result["allowed"] is True
 		assert result["remaining"] < 10
-		assert result["remaining"] == pytest.approx(2.13, abs=0.05)
+		assert result["remaining"] == pytest.approx(1.13, abs=0.05)
 
 	def test_window_rollover(self, mock_redis: MagicMock) -> None:
 		now = 100.0

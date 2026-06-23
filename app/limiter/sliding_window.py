@@ -63,7 +63,7 @@ class RedisSlidingWindowLimiter:
 		window_start = float(window_start_raw) if window_start_raw is not None else None
 
 		if window_start is None:
-			window_start = now
+			window_start = self._window_start_for(now)
 			prev_count = 0.0
 			curr_count = 0.0
 		elif now >= window_start + self.window_seconds:
@@ -72,7 +72,7 @@ class RedisSlidingWindowLimiter:
 			window_start = self._window_start_for(now)
 
 		effective_count = self._effective_count(prev_count, curr_count, window_start, now)
-		remaining = max(0.0, round(self.limit - effective_count, 2))
+		remaining = max(0.0, round(self.limit - (effective_count + 1), 2))
 		reset_in = max(0, int(math.ceil((window_start + self.window_seconds) - now)))
 
 		if effective_count >= self.limit:
