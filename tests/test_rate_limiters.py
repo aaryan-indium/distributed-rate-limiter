@@ -10,18 +10,24 @@ from app.limiter.token_bucket import RedisTokenBucketLimiter
 
 
 class TestFixedWindow:
+	def _mock_script(self, mock_redis: MagicMock, count: int) -> MagicMock:
+		script = MagicMock(return_value=count)
+		mock_redis.register_script.return_value = script
+		return script
+
 	def test_first_request_allowed(self, mock_redis: MagicMock) -> None:
-		mock_redis.incr.return_value = 1
+		script = self._mock_script(mock_redis, 1)
 		mock_redis.ttl.return_value = 60
 
 		limiter = RedisFixedWindowRateLimiter(mock_redis, limit=10, window_seconds=60)
 		result = limiter.allow_request("user-1")
 
 		assert result["allowed"] is True
-		mock_redis.expire.assert_called_once_with("rate:fixed:user-1", 60)
+		mock_redis.register_script.assert_called_once()
+		script.assert_called_once_with(keys=["rate:fixed:user-1"], args=[60])
 
 	def test_request_within_limit(self, mock_redis: MagicMock) -> None:
-		mock_redis.incr.return_value = 5
+		self._mock_script(mock_redis, 5)
 		mock_redis.ttl.return_value = 45
 
 		limiter = RedisFixedWindowRateLimiter(mock_redis, limit=10, window_seconds=60)
@@ -31,7 +37,7 @@ class TestFixedWindow:
 		assert result["remaining"] == 5
 
 	def test_request_at_limit(self, mock_redis: MagicMock) -> None:
-		mock_redis.incr.return_value = 10
+		self._mock_script(mock_redis, 10)
 		mock_redis.ttl.return_value = 30
 
 		limiter = RedisFixedWindowRateLimiter(mock_redis, limit=10, window_seconds=60)
@@ -41,7 +47,7 @@ class TestFixedWindow:
 		assert result["remaining"] == 0
 
 	def test_request_exceeds_limit(self, mock_redis: MagicMock) -> None:
-		mock_redis.incr.return_value = 11
+		self._mock_script(mock_redis, 11)
 		mock_redis.ttl.return_value = 25
 
 		limiter = RedisFixedWindowRateLimiter(mock_redis, limit=10, window_seconds=60)
@@ -50,7 +56,7 @@ class TestFixedWindow:
 		assert result["allowed"] is False
 
 	def test_retry_after_uses_ttl(self, mock_redis: MagicMock) -> None:
-		mock_redis.incr.return_value = 11
+		self._mock_script(mock_redis, 11)
 		mock_redis.ttl.return_value = 30
 
 		limiter = RedisFixedWindowRateLimiter(mock_redis, limit=10, window_seconds=60)

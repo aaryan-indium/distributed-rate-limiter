@@ -1,8 +1,9 @@
 """API routes for the rate limiter POC."""
 
+import time
 from typing import Dict
 
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from app.config.settings import settings
 from app.limiter.fixed_window import RedisFixedWindowRateLimiter
@@ -19,8 +20,14 @@ limiter = RedisFixedWindowRateLimiter(
 )
 
 
+def _set_rate_limit_headers(response: Response, result: Dict[str, object]) -> None:
+    response.headers["X-RateLimit-Limit"] = str(settings.RATE_LIMIT_REQUESTS)
+    response.headers["X-RateLimit-Remaining"] = str(result["remaining"])
+    response.headers["X-RateLimit-Reset"] = str(int(time.time()) + int(result["reset_in"]))
+
+
 @router.get("/test")
-def test_rate_limit(request: Request) -> Dict[str, object]:
+def test_rate_limit(request: Request, response: Response) -> Dict[str, object]:
     """Test endpoint guarded by the fixed window limiter."""
     # Request flow:
     # 1. Read the user identifier from X-User-ID.
@@ -52,6 +59,7 @@ def test_rate_limit(request: Request) -> Dict[str, object]:
             headers={"Retry-After": str(result["retry_after"])},
         )
 
+    _set_rate_limit_headers(response, result)
     return {
         "ok": True,
         "algorithm": "fixed_window",
@@ -62,7 +70,7 @@ def test_rate_limit(request: Request) -> Dict[str, object]:
 
 
 @router.get("/test/token")
-def test_token_bucket(request: Request) -> Dict[str, object]:
+def test_token_bucket(request: Request, response: Response) -> Dict[str, object]:
     """Test endpoint guarded by the token bucket limiter."""
     user_id = request.headers.get("X-User-ID")
     if not user_id:
@@ -89,6 +97,7 @@ def test_token_bucket(request: Request) -> Dict[str, object]:
             headers={"Retry-After": str(result["retry_after"])},
         )
 
+    _set_rate_limit_headers(response, result)
     return {
         "ok": True,
         "algorithm": "token_bucket",
@@ -99,7 +108,7 @@ def test_token_bucket(request: Request) -> Dict[str, object]:
 
 
 @router.get("/test/sliding")
-def test_sliding_window(request: Request) -> Dict[str, object]:
+def test_sliding_window(request: Request, response: Response) -> Dict[str, object]:
     """Test endpoint guarded by the sliding window limiter."""
     user_id = request.headers.get("X-User-ID")
     if not user_id:
@@ -126,6 +135,7 @@ def test_sliding_window(request: Request) -> Dict[str, object]:
             headers={"Retry-After": str(result["retry_after"])},
         )
 
+    _set_rate_limit_headers(response, result)
     return {
         "ok": True,
         "algorithm": "sliding_window",

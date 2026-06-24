@@ -20,3 +20,16 @@ COPILOT_CONTEXT.md
 
 # Docker
 .dockerignore
+# AI agent workspace
+.agent/
+.codex/
+
+# Pytest cache
+.pytest_cache/
+
+# Pycache
+__pycache__/
+*.pyc
+
+# Agents
+.agents/
